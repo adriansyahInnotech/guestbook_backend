@@ -2,7 +2,7 @@ package jwt
 
 import (
 	"fmt"
-	"guestbook/middleware/jwt/dto"
+	"guestbook_backend/middleware/jwt/dto"
 
 	"os"
 	"time"

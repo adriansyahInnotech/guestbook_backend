@@ -1,7 +1,7 @@
 package services
 
 import (
-	registrationmodel "guestbook/migration/registration_model"
+	registrationmodel "guestbook_backend/migration/registration_model"
 	"log"
 
 	"gorm.io/gorm"

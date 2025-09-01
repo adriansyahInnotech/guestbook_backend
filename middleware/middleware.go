@@ -1,22 +1,23 @@
 package middleware
 
 import (
-	"guestbook/middleware/casbin"
-	"guestbook/middleware/jwt"
-	"guestbook/middleware/websocket"
+	"guestbook_backend/helper"
+	"guestbook_backend/middleware/apikey"
 )
 
 type Middleware struct {
-	JWT       *jwt.Jwt
-	Websocket *websocket.Websocket
-	Casbin    *casbin.CasbinHandler
+	// JWT       *jwt.Jwt
+	// Websocket *websocket.Websocket
+	// Casbin    *casbin.CasbinHandler
+	ApiKey *apikey.ApiKey
 }
 
-func NewMiddlware() *Middleware {
+func NewMiddlware(helper *helper.Helper) *Middleware {
 	return &Middleware{
-		JWT:       jwt.NewJwt(),
-		Websocket: websocket.NewWebsocket(),
-		Casbin:    casbin.NewCasbinHandler(),
+		// JWT:       jwt.NewJwt(),
+		// Websocket: websocket.NewWebsocket(),
+		ApiKey: apikey.NewApiKey(helper),
+		// Casbin:    casbin.NewCasbinHandler(),
 	}
 
 }

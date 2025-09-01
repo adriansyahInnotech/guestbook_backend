@@ -1,0 +1,32 @@
+services:
+
+  guestbook_backend: 
+    build:
+      context: .
+      dockerfile: Dockerfile.guestbook.local
+    ports:
+      - 4018:4018
+    volumes:
+      - ./apps/guestbook:/app/apps/guestbook
+      - ./config:/app/config
+      - ./db:/app/db
+      - ./helper:/app/helper
+      - ./middleware:/app/middleware
+      - ./models:/app/models
+      - ./repository:/app/repository
+    env_file:
+      - .env.guestbook.local
+    depends_on:
+      - postgres
+
+
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: guestbook
+      POSTGRES_USER: adriansyah
+      POSTGRES_PASSWORD: adriansyahganteng
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./data:/var/lib/postgresql/data

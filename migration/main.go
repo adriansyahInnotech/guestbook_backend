@@ -3,8 +3,8 @@ package main
 import (
 	"flag"
 	"fmt"
-	"guestbook/db"
-	"guestbook/migration/services"
+	"guestbook_backend/db"
+	"guestbook_backend/migration/services"
 	"log"
 	"os"
 

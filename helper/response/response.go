@@ -1,6 +1,6 @@
 package response
 
-import "guestbook/helper/response/dto"
+import "guestbook_backend/helper/response/dto"
 
 type Response struct {
 }

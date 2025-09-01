@@ -1,8 +1,8 @@
 package helper
 
 import (
-	"guestbook/helper/response"
-	"guestbook/helper/utils"
+	"guestbook_backend/helper/response"
+	"guestbook_backend/helper/utils"
 )
 
 type Helper struct {

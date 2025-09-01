@@ -1,4 +1,4 @@
-module guestbook/helper
+module guestbook_backend/helper
 
 go 1.24.2
 

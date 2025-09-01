@@ -1,4 +1,4 @@
-module guestbook/db
+module guestbook_backend/db
 
 go 1.24.1
 

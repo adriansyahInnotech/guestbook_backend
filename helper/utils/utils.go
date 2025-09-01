@@ -1,13 +1,13 @@
 package utils
 
 type Utils struct {
-	JaegerTracer         JaegerTracer
-	GenerateTicketNumber GenerateTicketNumber
+	JaegerTracer *JaegerTracer
+	ApiKey       *ApiKey
 }
 
 func NewUtils() *Utils {
 	return &Utils{
-		JaegerTracer:         *NewJaegerTracer(),
-		GenerateTicketNumber: *NewGenerateTicketNumber(),
+		JaegerTracer: NewJaegerTracer(),
+		ApiKey:       NewApiKey(),
 	}
 }

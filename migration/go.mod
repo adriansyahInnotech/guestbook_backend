@@ -1,4 +1,4 @@
-module guestbook/migration
+module guestbook_backend/migration
 
 go 1.24.2
 

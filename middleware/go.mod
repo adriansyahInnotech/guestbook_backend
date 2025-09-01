@@ -1,4 +1,4 @@
-module guestbook/middleware
+module guestbook_backend/middleware
 
 go 1.24.2
 
