@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>SSE Client Demo</title>
+</head>
+<body>
+  <h1>SSE Client (Device 1)</h1>
+  <div id="log"></div>
+
+  <script>
+    const deviceId = "1";
+    const url = `http://localhost:4019/api/sse_guestbook/v1/visitor/scan?device_id=1`;
+    const logDiv = document.getElementById("log");
+
+    function log(msg) {
+      const p = document.createElement("p");
+      p.textContent = msg;
+      logDiv.appendChild(p);
+    }
+
+    const evtSource = new EventSource(url);
+
+    evtSource.onopen = () => log("✅ Connected to SSE server");
+    evtSource.onmessage = (e) => log("📩 Message: " + e.data);
+    evtSource.onerror = (e) => log("❌ SSE error, retrying...");
+  </script>
+</body>
+</html>

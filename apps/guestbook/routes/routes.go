@@ -16,8 +16,8 @@ type Routes struct {
 	middleware  *middleware.Middleware
 }
 
-func NewRoutes() *Routes {
-	helper := helper.NewHelper()
+func NewRoutes(helper *helper.Helper) *Routes {
+	// helper := helper.NewHelper(b)
 
 	return &Routes{
 		controllers: controllers.NewControllers(helper),

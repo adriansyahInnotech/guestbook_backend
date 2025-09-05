@@ -8,5 +8,6 @@ use (
 	./config
 	./helper
 	./apps/guestbook
+	./apps/sse_guestbook
 	./repository
 )

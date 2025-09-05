@@ -5,8 +5,12 @@ import (
 	"guestbook_backend/apps/guestbook/routes"
 	"guestbook_backend/config"
 	"guestbook_backend/db"
+	"guestbook_backend/helper"
 	"log"
 	"os"
+	"strings"
+
+	"github.com/nats-io/nats.go"
 )
 
 func init() {
@@ -24,8 +28,24 @@ func main() {
 
 	// config.InitCasbin()
 
+	natsBroker := config.NewNatsBroker()
+	helper := helper.NewHelper(natsBroker)
+
+	_, err := helper.Utils.Nats.Subscribe("device.*", func(msg *nats.Msg) {
+		subject := msg.Subject
+		deviceID := strings.TrimPrefix(subject, "device.")
+		payload := string(msg.Data)
+
+		helper.Utils.HubSse.Send(deviceID, payload)
+	})
+	if err != nil {
+		log.Fatalf("Error subscribe: %v", err)
+	}
+
 	app := config.LoadConfigApp()
-	routes.NewRoutes().Routes(app)
+
+	routes.NewRoutes(helper).Routes(app)
+
 	log.Fatal(app.Listen(os.Getenv("APP_PORT")))
 
 }

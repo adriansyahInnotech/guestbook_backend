@@ -7,12 +7,14 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
+	"github.com/r3labs/sse/v2"
 )
 
 type VisitorController struct {
 	helper     *helper.Helper
 	service    services.Visitor
 	validation *validator.Validate
+	SSe        *sse.Server
 }
 
 func NewVisitorController(helper *helper.Helper, service services.Visitor) *VisitorController {
@@ -20,6 +22,7 @@ func NewVisitorController(helper *helper.Helper, service services.Visitor) *Visi
 		helper:     helper,
 		service:    service,
 		validation: validator.New(),
+		SSe:        sse.New(),
 	}
 }
 

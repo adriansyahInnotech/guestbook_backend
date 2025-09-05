@@ -1,6 +1,7 @@
 package dtos
 
 type Visitor struct {
+	DeviceID     string `json:"device_id"`
 	FullName     string `json:"full_name" validate:"required"`
 	Company      string `json:"company"`
 	Phone        string `json:"phone" validate:"required"`
