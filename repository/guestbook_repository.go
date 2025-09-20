@@ -12,15 +12,16 @@ type TransactionalRepository interface {
 }
 
 type GuestbookRepository struct {
-	AccessPolicyRepository guestbook.PolicyRepository
-	VisitorRepository      guestbook.VisitorRepository
-	VisitRepository        guestbook.VisitRepository
-	DeviceRepository       guestbook.DeviceRepository
-	CompanyRepository      guestbook.CompanyRepository
-	DivisionRepository     guestbook.DivisionRepository
-	DepartmentRepository   guestbook.DepartmentRepository
-	SectionRepository      guestbook.SectionRepository
-	AccessCardRepository   guestbook.AccessCardRepository
+	AccessPolicyRepository       guestbook.PolicyRepository
+	VisitorRepository            guestbook.VisitorRepository
+	VisitRepository              guestbook.VisitRepository
+	DeviceRepository             guestbook.DeviceRepository
+	CompanyRepository            guestbook.CompanyRepository
+	DivisionRepository           guestbook.DivisionRepository
+	DepartmentRepository         guestbook.DepartmentRepository
+	SectionRepository            guestbook.SectionRepository
+	AccessCardRepository         guestbook.AccessCardRepository
+	AccessPolicyDeviceRepository guestbook.PolicyDeviceRepository
 
 	all []TransactionalRepository
 }
@@ -28,15 +29,16 @@ type GuestbookRepository struct {
 func NewGuestbookRepository() *GuestbookRepository {
 
 	r := &GuestbookRepository{
-		AccessPolicyRepository: guestbook.NewPolicyRepository(),
-		VisitorRepository:      guestbook.NewVisitorRepository(),
-		VisitRepository:        guestbook.NewVisitorRepository(),
-		DeviceRepository:       guestbook.NewDeviceRepository(),
-		CompanyRepository:      guestbook.NewCompanyRepository(),
-		DivisionRepository:     guestbook.NewDivisionRepository(),
-		DepartmentRepository:   guestbook.NewDepartmentRepository(),
-		SectionRepository:      guestbook.NewSectionRepository(),
-		AccessCardRepository:   guestbook.NewAccessCardRepository(),
+		AccessPolicyRepository:       guestbook.NewPolicyRepository(),
+		VisitorRepository:            guestbook.NewVisitorRepository(),
+		VisitRepository:              guestbook.NewVisitRepository(),
+		DeviceRepository:             guestbook.NewDeviceRepository(),
+		CompanyRepository:            guestbook.NewCompanyRepository(),
+		DivisionRepository:           guestbook.NewDivisionRepository(),
+		DepartmentRepository:         guestbook.NewDepartmentRepository(),
+		SectionRepository:            guestbook.NewSectionRepository(),
+		AccessCardRepository:         guestbook.NewAccessCardRepository(),
+		AccessPolicyDeviceRepository: guestbook.NewPolicyDeviceRepository(),
 	}
 
 	// Kumpulkan semua repository yang support transaksi
@@ -50,6 +52,7 @@ func NewGuestbookRepository() *GuestbookRepository {
 		r.DepartmentRepository,
 		r.SectionRepository,
 		r.AccessCardRepository,
+		r.AccessPolicyDeviceRepository,
 	}
 
 	return r

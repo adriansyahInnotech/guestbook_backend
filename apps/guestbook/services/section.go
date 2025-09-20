@@ -15,6 +15,7 @@ import (
 type Section interface {
 	Upsert(tracerCtx context.Context, data *dtos.PlaceSetting) *dto.Response
 	GetAll(tracerCtx context.Context, name string, page int) *dto.Response
+	GetByDepartementID(tracerCtx context.Context, id string) *dto.Response
 	Delete(tracerCtx context.Context, id string) *dto.Response
 }
 
@@ -110,5 +111,20 @@ func (s *section) Delete(tracerCtx context.Context, id string) *dto.Response {
 	}
 
 	return s.helper.Response.JSONResponseSuccess("", 0, 0, "berhasil")
+
+}
+
+func (s *section) GetByDepartementID(tracerCtx context.Context, id string) *dto.Response {
+
+	_, span := s.helper.Utils.JaegerTracer.StartSpan(tracerCtx, "guestbook_section_services", "get_by_section_id")
+	defer span.End()
+
+	departementModel, err := s.repositoryGuestbook.SectionRepository.GetByDepartmentID(id)
+	if err != nil {
+		s.helper.Utils.JaegerTracer.RecordSpanError(span, err)
+		return s.helper.Response.JSONResponseError(fiber.StatusInternalServerError, "failed to get_by_section_id")
+	}
+
+	return s.helper.Response.JSONResponseSuccess(departementModel, 0, 0, "berhasil")
 
 }

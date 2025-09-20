@@ -14,7 +14,6 @@ type Visit struct {
 	DepartmentID *uuid.UUID `gorm:"type:uuid;column:department_id"`
 	SectionID    *uuid.UUID `gorm:"type:uuid;column:section_id"`
 	EmployeeID   *uuid.UUID `gorm:"type:uuid;column:employee_id"`
-	FrontDeskID  *uuid.UUID `gorm:"type:uuid;column:front_desk_id"`
 	AccessCardID *uuid.UUID `gorm:"type:uuid;column:access_card_id"`
 	DeviceID     *uuid.UUID `gorm:"type:uuid;column:device_id"`
 	CheckIn      time.Time  `gorm:"not null;default:CURRENT_TIMESTAMP;column:check_in"`
@@ -29,7 +28,6 @@ type Visit struct {
 	Department *Department
 	Section    *Section
 	Employee   *Employee
-	FrontDesk  *FrontDeskStaff
 	AccessCard *AccessCard
 	Device     *Device
 }

@@ -12,5 +12,6 @@ type AccessPolicy struct {
 	CreatedAt time.Time `gorm:"column:created_at"`
 	UpdatedAt time.Time `gorm:"column:updated_at"`
 
-	Devices []Device `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;foreignKey:PolicyID"`
+	Devices []AccessPolicyDevice `gorm:"foreignKey:AccessPolicyID"`
+	// Devices []Device `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;foreignKey:PolicyID"`
 }

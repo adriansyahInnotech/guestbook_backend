@@ -1,15 +1,16 @@
 package main
 
 import (
-	"fmt"
 	"guestbook_backend/apps/sse_guestbook/routes"
 	"guestbook_backend/config"
+	"guestbook_backend/helper/utils/hub"
 	natshelper "guestbook_backend/helper/utils/nats_helper"
 	"log"
 	"net/http"
 	"os"
 	"strings"
 
+	"github.com/nats-io/nats.go"
 	"github.com/rs/cors"
 )
 
@@ -22,14 +23,21 @@ func main() {
 
 	//helper
 	natsHelper := natshelper.NewNatsHelper(nc)
+	hubSSe := hub.NewHubSse()
 
-	routes.NewRoutes(natsHelper).Routes(mux)
+	_, err := natsHelper.Subscribe("device.*", func(msg *nats.Msg) {
+		subject := msg.Subject
+		deviceID := strings.TrimPrefix(subject, "device.")
+		hubSSe.Send(deviceID, string(msg.Data))
+	})
+	if err != nil {
+		log.Fatal("failed to subscribe:", err)
+	}
 
-	origins := strings.Split(os.Getenv("CORS_ALLOWED_ORIGINS"), ",")
-	methods := strings.Split(os.Getenv("CORS_ALLOWED_METHODS"), ",")
+	routes.NewRoutes(hubSSe).Routes(mux)
 
-	fmt.Println("origins : ", origins)
-	fmt.Println("methods : ", methods)
+	origins := strings.Split(os.Getenv("CORS_ALLOW_ORIGINS"), ",")
+	methods := strings.Split(os.Getenv("CORS_ALLOW_METHOD"), ",")
 
 	c := cors.New(cors.Options{
 		AllowedOrigins:   origins,

@@ -4,6 +4,7 @@ import (
 	"guestbook_backend/db"
 	"guestbook_backend/models"
 
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -13,6 +14,7 @@ type DivisionRepository interface {
 	ClearTransactionDB()
 	Upsert(division *models.Division) error
 	GetAll(name string, page int, pagesize int) (*[]models.Division, int64, error)
+	GetByID(id uuid.UUID) (*models.Division, error)
 	Delete(id string) error
 }
 
@@ -68,13 +70,27 @@ func (s *divisionRepository) GetAll(name string, page int, pagesize int) (*[]mod
 	}
 
 	offset := (page - 1) * pagesize
-	result := query.Preload("Company").Preload("Policy").Offset(offset).Limit(pagesize).Find(divisionModel)
+	result := query.Preload("Departments").Preload("Company").Preload("Policy").Offset(offset).Limit(pagesize).Find(divisionModel)
 
 	if result.Error != nil && result.Error != gorm.ErrRecordNotFound {
 		return nil, total, err
 	}
 
 	return divisionModel, total, err
+
+}
+
+func (s *divisionRepository) GetByID(id uuid.UUID) (*models.Division, error) {
+
+	divisionModel := new(models.Division)
+
+	result := s.db.Where("id = ?", id).Preload("Policy").First(divisionModel)
+
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	return divisionModel, nil
 
 }
 

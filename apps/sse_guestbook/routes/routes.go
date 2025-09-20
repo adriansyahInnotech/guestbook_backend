@@ -3,7 +3,7 @@ package routes
 import (
 	"fmt"
 	"guestbook_backend/apps/sse_guestbook/controllers"
-	natshelper "guestbook_backend/helper/utils/nats_helper"
+	"guestbook_backend/helper/utils/hub"
 	"net/http"
 	"os"
 )
@@ -12,9 +12,9 @@ type Routes struct {
 	controller *controllers.Controllers
 }
 
-func NewRoutes(natsHelper *natshelper.NatsHelper) *Routes {
+func NewRoutes(hub *hub.HubSse) *Routes {
 	return &Routes{
-		controller: controllers.NewControllers(natsHelper),
+		controller: controllers.NewControllers(hub),
 	}
 }
 

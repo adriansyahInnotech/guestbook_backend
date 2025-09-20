@@ -15,6 +15,7 @@ import (
 
 func init() {
 	db.InitDB()
+	db.InitRedis()
 	config.InitTracer()
 }
 

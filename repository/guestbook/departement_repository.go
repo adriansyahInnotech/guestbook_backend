@@ -4,6 +4,7 @@ import (
 	"guestbook_backend/db"
 	"guestbook_backend/models"
 
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -14,6 +15,8 @@ type DepartmentRepository interface {
 	Upsert(division *models.Department) error
 	GetAll(name string, page int, pagesize int) (*[]models.Department, int64, error)
 	Delete(id string) error
+	GetByDivisionID(id string) (*[]models.Department, error)
+	GetByID(id uuid.UUID) (*models.Department, error)
 }
 
 type departmentRepository struct {
@@ -68,13 +71,39 @@ func (s *departmentRepository) GetAll(name string, page int, pagesize int) (*[]m
 	}
 
 	offset := (page - 1) * pagesize
-	result := query.Preload("Division").Preload("Policy").Offset(offset).Limit(pagesize).Find(departmentModel)
+	result := query.Preload("Sections").Preload("Division").Preload("Policy").Offset(offset).Limit(pagesize).Find(departmentModel)
 
 	if result.Error != nil && result.Error != gorm.ErrRecordNotFound {
 		return nil, total, err
 	}
 
 	return departmentModel, total, err
+
+}
+
+func (s *departmentRepository) GetByDivisionID(id string) (*[]models.Department, error) {
+	departmentModel := new([]models.Department)
+
+	result := s.db.Where("division_id = ?", id).Find(departmentModel)
+
+	if result.Error != nil && result.Error != gorm.ErrRecordNotFound {
+		return nil, result.Error
+	}
+
+	return departmentModel, nil
+}
+
+func (s *departmentRepository) GetByID(id uuid.UUID) (*models.Department, error) {
+
+	departementModel := new(models.Department)
+
+	result := s.db.Where("id = ?", id).First(departementModel)
+
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	return departementModel, nil
 
 }
 

@@ -80,3 +80,25 @@ func (s *DeviceController) Delete(c *fiber.Ctx) error {
 	return c.Status(data.StatusCode).JSON(data)
 
 }
+
+func (s *DeviceController) ValidateCard(c *fiber.Ctx) error {
+	tracerCtx := c.UserContext()
+
+	_, span := s.helper.Utils.JaegerTracer.StartSpan(tracerCtx, "guestbook_device_controllers", "validate_card")
+	defer span.End()
+
+	cardNumber := c.Params("card_number")
+	deviceID := c.Params("device_id")
+
+	if cardNumber == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(s.helper.Response.JSONResponseError(fiber.StatusBadRequest, "masukan data dengan benar"))
+	}
+
+	if deviceID == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(s.helper.Response.JSONResponseError(fiber.StatusBadRequest, "masukan data dengan benar"))
+	}
+
+	data := s.service.ValidateCard(tracerCtx, cardNumber, deviceID)
+	return c.Status(data.StatusCode).JSON(data)
+
+}

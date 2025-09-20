@@ -52,9 +52,11 @@ func (s *Routes) Routes(app *fiber.App) {
 
 	v1.Get("/departement/all", s.controllers.Departement.GetAll)
 	v1.Post("/departement/add", s.controllers.Departement.Add)
+	v1.Get("/departement/division/:id", s.controllers.Departement.GetByDivisionID)
 	v1.Delete("/departement/delete/:id", s.controllers.Departement.Delete)
 
 	v1.Get("/section/all", s.controllers.Section.GetAll)
+	v1.Get("/section/departement/:id", s.controllers.Section.GetByDepartementID)
 	v1.Post("/section/add", s.controllers.Section.Add)
 	v1.Delete("/section/delete/:id", s.controllers.Section.Delete)
 
@@ -63,5 +65,6 @@ func (s *Routes) Routes(app *fiber.App) {
 
 	//visitor
 	v1.Post("/visitor/add", s.controllers.Visitor.Add)
+	v1.Get("/device/validate_card/:card_number/:device_id", s.controllers.Device.ValidateCard)
 
 }

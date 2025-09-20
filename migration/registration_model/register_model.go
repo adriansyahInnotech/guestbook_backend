@@ -13,10 +13,10 @@ func RegisterModels() []interface{} {
 		&models.Department{},
 		&models.Division{},
 		&models.Employee{},
-		&models.FrontDeskStaff{},
 		&models.Section{},
 		&models.Visitor{},
 		&models.Visit{},
+		&models.AccessPolicyDevice{},
 		// Tambahkan model lain di sini, cukup 1 baris
 	}
 }

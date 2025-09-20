@@ -54,7 +54,7 @@ func (s *deviceRepository) GetAll(name string, page int, pagesize int) (*[]model
 	}
 
 	offset := (page - 1) * pagesize
-	result := query.Preload("Policy").Offset(offset).Limit(pagesize).Find(deviceModel)
+	result := query.Preload("AccessPolicies").Offset(offset).Limit(pagesize).Find(deviceModel)
 
 	if result.Error != nil && result.Error != gorm.ErrRecordNotFound {
 		return nil, total, err

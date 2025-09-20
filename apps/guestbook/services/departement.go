@@ -15,6 +15,7 @@ import (
 type Department interface {
 	Upsert(tracerCtx context.Context, data *dtos.PlaceSetting) *dto.Response
 	GetAll(tracerCtx context.Context, name string, page int) *dto.Response
+	GetByDivisionID(tracerCtx context.Context, id string) *dto.Response
 	Delete(tracerCtx context.Context, id string) *dto.Response
 }
 
@@ -96,6 +97,21 @@ func (s *department) GetAll(tracerCtx context.Context, name string, page int) *d
 	totalPages := (total + int64(pagesize) - 1) / int64(pagesize)
 
 	return s.helper.Response.JSONResponseSuccess(DepartmentModel, int64(page), totalPages, "berhasil")
+
+}
+
+func (s *department) GetByDivisionID(tracerCtx context.Context, id string) *dto.Response {
+
+	_, span := s.helper.Utils.JaegerTracer.StartSpan(tracerCtx, "guestbook_division_services", "get_by_division_id")
+	defer span.End()
+
+	departementModel, err := s.repositoryGuestbook.DepartmentRepository.GetByDivisionID(id)
+	if err != nil {
+		s.helper.Utils.JaegerTracer.RecordSpanError(span, err)
+		return s.helper.Response.JSONResponseError(fiber.StatusInternalServerError, "failed to get_by_division_id")
+	}
+
+	return s.helper.Response.JSONResponseSuccess(departementModel, 0, 0, "berhasil")
 
 }
 

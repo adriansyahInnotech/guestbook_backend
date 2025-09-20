@@ -64,6 +64,19 @@ func (s *SectionController) GetAll(c *fiber.Ctx) error {
 
 }
 
+func (s *SectionController) GetByDepartementID(c *fiber.Ctx) error {
+	tracerCtx := c.UserContext()
+
+	_, span := s.helper.Utils.JaegerTracer.StartSpan(tracerCtx, "guestbook.section_controllers", "get_by_section_id")
+	defer span.End()
+
+	id := c.Params("id")
+
+	data := s.service.GetByDepartementID(tracerCtx, id)
+	return c.Status(data.StatusCode).JSON(data)
+
+}
+
 func (s *SectionController) Delete(c *fiber.Ctx) error {
 	tracerCtx := c.UserContext()
 

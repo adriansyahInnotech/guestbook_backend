@@ -53,3 +53,11 @@ services:
       - "4222:4222" # NATS client connections
       - "8222:8222" # Monitoring dashboard
     command: -js # aktifkan JetStream juga, walau kita pakai core
+
+  redis:
+    image: redis:6.2.14
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./redis:/data

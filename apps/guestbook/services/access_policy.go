@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	customresponse "guestbook_backend/apps/guestbook/custom_response"
 	"guestbook_backend/apps/guestbook/dtos"
 	"guestbook_backend/db"
 	"guestbook_backend/helper"
@@ -46,7 +47,33 @@ func (s *accessPolicy) GetAll(tracerCtx context.Context, name string, page int) 
 
 	totalPages := (total + int64(pagesize) - 1) / int64(pagesize)
 
-	return s.helper.Response.JSONResponseSuccess(policyModel, int64(page), totalPages, "berhasil")
+	responses := []customresponse.AccessPolicy{}
+
+	for _, v := range *policyModel {
+
+		response := &customresponse.AccessPolicy{
+			ID:        v.ID,
+			Name:      v.Name,
+			CreatedAt: v.CreatedAt,
+			UpdatedAt: v.UpdatedAt,
+		}
+
+		for _, v1 := range v.Devices {
+			device := &customresponse.Device{
+				ID:       v1.DeviceID,
+				Name:     v1.Device.Name,
+				Location: v1.Device.Location,
+				IsActive: v1.Device.IsActive,
+			}
+
+			response.Devices = append(response.Devices, *device)
+		}
+
+		responses = append(responses, *response)
+
+	}
+
+	return s.helper.Response.JSONResponseSuccess(responses, int64(page), totalPages, "berhasil")
 
 }
 
@@ -75,6 +102,8 @@ func (s *accessPolicy) Upsert(tracerCtx context.Context, data *dtos.AccessPolicy
 
 	newPolicyModel.Name = data.Name
 
+	accessPolicyDevicesModel := []models.AccessPolicyDevice{}
+
 	if err := s.repositoryGuestbook.AccessPolicyRepository.Add(newPolicyModel); err != nil {
 		tx.Rollback()
 		s.repositoryGuestbook.ClearTransactionDB()
@@ -82,11 +111,34 @@ func (s *accessPolicy) Upsert(tracerCtx context.Context, data *dtos.AccessPolicy
 		return s.helper.Response.JSONResponseError(fiber.StatusInternalServerError, "failed add policy")
 	}
 
-	if err := s.repositoryGuestbook.DeviceRepository.BatchUpdatePolicyDevices(data.DeviceIDs, newPolicyModel.ID); err != nil {
+	for _, v := range data.DeviceIDs {
+		accessPolicyDeviceModel := &models.AccessPolicyDevice{
+			AccessPolicyID: newPolicyModel.ID,
+			DeviceID:       v,
+		}
+
+		accessPolicyDevicesModel = append(accessPolicyDevicesModel, *accessPolicyDeviceModel)
+	}
+
+	if err := s.repositoryGuestbook.AccessPolicyDeviceRepository.Delete(newPolicyModel.ID); err != nil {
+		tx.Rollback()
+		s.repositoryGuestbook.ClearTransactionDB()
+		s.helper.Utils.JaegerTracer.RecordSpanError(span, err)
+		return s.helper.Response.JSONResponseError(fiber.StatusInternalServerError, "failed delete policy device")
+	}
+
+	if err := s.repositoryGuestbook.AccessPolicyDeviceRepository.Add(accessPolicyDevicesModel); err != nil {
 		tx.Rollback()
 		s.repositoryGuestbook.ClearTransactionDB()
 		s.helper.Utils.JaegerTracer.RecordSpanError(span, err)
 		return s.helper.Response.JSONResponseError(fiber.StatusInternalServerError, "failed update policy device")
+	}
+
+	if err := s.repositoryGuestbook.AccessPolicyRepository.SyncPolicyToRedis(newPolicyModel.ID); err != nil {
+		tx.Rollback()
+		s.repositoryGuestbook.ClearTransactionDB()
+		s.helper.Utils.JaegerTracer.RecordSpanError(span, err)
+		return s.helper.Response.JSONResponseError(fiber.StatusInternalServerError, "failed sync policy card")
 	}
 
 	if err := tx.Commit().Error; err != nil {

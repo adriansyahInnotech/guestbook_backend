@@ -13,6 +13,7 @@ type SectionRepository interface {
 	ClearTransactionDB()
 	Upsert(division *models.Section) error
 	GetAll(name string, page int, pagesize int) (*[]models.Section, int64, error)
+	GetByDepartmentID(id string) (*[]models.Section, error)
 	Delete(id string) error
 }
 
@@ -76,6 +77,18 @@ func (s *sectionRepository) GetAll(name string, page int, pagesize int) (*[]mode
 
 	return sectionModel, total, err
 
+}
+
+func (s *sectionRepository) GetByDepartmentID(id string) (*[]models.Section, error) {
+	sectionModel := new([]models.Section)
+
+	result := s.db.Where("department_id = ?", id).Find(sectionModel)
+
+	if result.Error != nil && result.Error != gorm.ErrRecordNotFound {
+		return nil, result.Error
+	}
+
+	return sectionModel, nil
 }
 
 func (s *sectionRepository) Delete(id string) error {

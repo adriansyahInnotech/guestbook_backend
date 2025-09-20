@@ -2,11 +2,13 @@ package services
 
 import (
 	"context"
+	"fmt"
 	"guestbook_backend/apps/guestbook/dtos"
 	"guestbook_backend/helper"
 	"guestbook_backend/helper/response/dto"
 	"guestbook_backend/models"
 	"guestbook_backend/repository"
+	"guestbook_backend/repository/redis"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
@@ -16,17 +18,20 @@ type Device interface {
 	GetAll(tracerCtx context.Context, name string, page int) *dto.Response
 	Upsert(tracerCtx context.Context, data *dtos.Device) *dto.Response
 	Delete(tracerCtx context.Context, id string) *dto.Response
+	ValidateCard(tracerCtx context.Context, cardNumberID string, deviceID string) *dto.Response
 }
 
 type device struct {
 	helper              *helper.Helper
 	repositoryGuestbook *repository.GuestbookRepository
+	redisRepository     redis.RedisRepository
 }
 
 func NewDeviceServices(helper *helper.Helper, repositoryGuestbook *repository.GuestbookRepository) Device {
 	return &device{
 		helper:              helper,
 		repositoryGuestbook: repositoryGuestbook,
+		redisRepository:     redis.NewRedisRepository(),
 	}
 }
 
@@ -97,5 +102,23 @@ func (s *device) Delete(tracerCtx context.Context, id string) *dto.Response {
 	}
 
 	return s.helper.Response.JSONResponseSuccess("", 0, 0, "berhasil")
+
+}
+
+func (s *device) ValidateCard(tracerCtx context.Context, cardNumberID string, deviceID string) *dto.Response {
+
+	_, span := s.helper.Utils.JaegerTracer.StartSpan(tracerCtx, "guestbook_device_services", "validate_card")
+	defer span.End()
+
+	allowed, err := s.redisRepository.ValidateAccess(cardNumberID, deviceID)
+	if err != nil {
+		fmt.Println("err : ", err.Error())
+		s.helper.Utils.JaegerTracer.RecordSpanError(span, err)
+		return s.helper.Response.JSONResponseSuccess(allowed, 0, 0, "not allowed")
+	}
+
+	fmt.Println("allowed : ", allowed)
+
+	return s.helper.Response.JSONResponseSuccess(allowed, 0, 0, "berhasil")
 
 }
