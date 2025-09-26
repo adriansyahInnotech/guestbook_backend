@@ -19,6 +19,7 @@ import (
 )
 
 type Visitor interface {
+	GetAll(tracerCtx context.Context, name string, page int) *dto.Response
 	Upsert(tracerCtx context.Context, data *dtos.Visitor) *dto.Response
 }
 
@@ -32,6 +33,25 @@ func NewVisitorServices(helper *helper.Helper, repositoryGuestbook *repository.G
 		helper:              helper,
 		repositoryGuestbook: repositoryGuestbook,
 	}
+}
+
+func (s *visitor) GetAll(tracerCtx context.Context, name string, page int) *dto.Response {
+
+	_, span := s.helper.Utils.JaegerTracer.StartSpan(tracerCtx, "guestbook_visitor_services", "get_all")
+	defer span.End()
+
+	pagesize := 5
+
+	visitorModel, total, err := s.repositoryGuestbook.VisitorRepository.GetAll(name, page, pagesize)
+	if err != nil {
+		s.helper.Utils.JaegerTracer.RecordSpanError(span, err)
+		return s.helper.Response.JSONResponseError(fiber.StatusInternalServerError, "failed to get all Section")
+	}
+
+	totalPages := (total + int64(pagesize) - 1) / int64(pagesize)
+
+	return s.helper.Response.JSONResponseSuccess(visitorModel, int64(page), totalPages, "berhasil")
+
 }
 
 func (s *visitor) Upsert(tracerCtx context.Context, data *dtos.Visitor) *dto.Response {

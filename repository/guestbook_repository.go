@@ -22,6 +22,7 @@ type GuestbookRepository struct {
 	SectionRepository            guestbook.SectionRepository
 	AccessCardRepository         guestbook.AccessCardRepository
 	AccessPolicyDeviceRepository guestbook.PolicyDeviceRepository
+	DashboardRepository          guestbook.DashboardRepository
 
 	all []TransactionalRepository
 }
@@ -39,6 +40,7 @@ func NewGuestbookRepository() *GuestbookRepository {
 		SectionRepository:            guestbook.NewSectionRepository(),
 		AccessCardRepository:         guestbook.NewAccessCardRepository(),
 		AccessPolicyDeviceRepository: guestbook.NewPolicyDeviceRepository(),
+		DashboardRepository:          guestbook.NewDashboardRepository(),
 	}
 
 	// Kumpulkan semua repository yang support transaksi
@@ -53,6 +55,7 @@ func NewGuestbookRepository() *GuestbookRepository {
 		r.SectionRepository,
 		r.AccessCardRepository,
 		r.AccessPolicyDeviceRepository,
+		r.DashboardRepository,
 	}
 
 	return r

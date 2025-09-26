@@ -4,6 +4,7 @@ import (
 	"guestbook_backend/db"
 	"guestbook_backend/models"
 	"guestbook_backend/repository/redis"
+	"time"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -14,7 +15,9 @@ type AccessCardRepository interface {
 	SetDB(db *gorm.DB)
 	ClearTransactionDB()
 	Upsert(accessCard *models.AccessCard) error
-	GetByCardNumber(access_card string) (*models.AccessCard, error)
+	ReleaseCard(cardID uuid.UUID) error
+	GetAccessCardByCardNumber(card_number string) (*models.AccessCard, error)
+	GetAll(name string, page int, pagesize int) (*[]models.AccessCard, int64, error)
 	SyncCardToRedis(cardID uuid.UUID) error
 }
 
@@ -48,17 +51,51 @@ func (s *accessCardRepository) Upsert(accessCard *models.AccessCard) error {
 
 }
 
-func (s *accessCardRepository) GetByCardNumber(access_card string) (*models.AccessCard, error) {
+func (s *accessCardRepository) ReleaseCard(cardID uuid.UUID) error {
+	return s.db.Model(&models.AccessCard{}).
+		Where("id = ?", cardID).
+		Updates(map[string]interface{}{
+			"visitor_id": nil, // atau null-kan visitor_id
+			"updated_at": time.Now(),
+		}).Error
+}
 
-	access_cardModel := new(models.AccessCard)
+func (s *accessCardRepository) GetAccessCardByCardNumber(card_number string) (*models.AccessCard, error) {
+	accessCardModel := new(models.AccessCard)
 
-	result := s.db.Where("card_number = ?", access_card).Find(access_cardModel)
+	result := s.db.Where("card_number = ?", card_number).First(accessCardModel)
 
-	if result.Error != nil && result.Error != gorm.ErrRecordNotFound {
+	if result.Error != nil {
 		return nil, result.Error
 	}
 
-	return access_cardModel, nil
+	return accessCardModel, nil
+
+}
+
+func (s *accessCardRepository) GetAll(card_number string, page int, pagesize int) (*[]models.AccessCard, int64, error) {
+	var total int64
+	accessCardModel := new([]models.AccessCard)
+
+	query := s.db.Model(accessCardModel)
+
+	if card_number != "" {
+		query = query.Where("card_number ILIKE ?", "%"+card_number+"%")
+	}
+
+	err := query.Count(&total).Error
+	if err != nil {
+		return nil, 0, err
+	}
+
+	offset := (page - 1) * pagesize
+	result := query.Preload("Visitor").Offset(offset).Limit(pagesize).Find(accessCardModel)
+
+	if result.Error != nil && result.Error != gorm.ErrRecordNotFound {
+		return nil, total, err
+	}
+
+	return accessCardModel, total, err
 
 }
 

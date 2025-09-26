@@ -13,6 +13,9 @@ type Services struct {
 	Division     Division
 	Department   Department
 	Section      Section
+	Visit        Visit
+	AccessCard   AccessCard
+	Dashboard    Dashboard
 }
 
 func NewServices(helper *helper.Helper, repositoryGuestbook *repository.GuestbookRepository) *Services {
@@ -24,5 +27,8 @@ func NewServices(helper *helper.Helper, repositoryGuestbook *repository.Guestboo
 		Division:     NewDivisionServices(helper, repositoryGuestbook),
 		Department:   NewDepartmentServices(helper, repositoryGuestbook),
 		Section:      NewSectionServices(helper, repositoryGuestbook),
+		Visit:        NewVisitServices(helper, repositoryGuestbook),
+		AccessCard:   NewAccessCardServices(helper, repositoryGuestbook),
+		Dashboard:    NewDashboardService(helper, repositoryGuestbook),
 	}
 }

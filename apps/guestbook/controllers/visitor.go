@@ -1,9 +1,11 @@
 package controllers
 
 import (
+	"fmt"
 	"guestbook_backend/apps/guestbook/dtos"
 	"guestbook_backend/apps/guestbook/services"
 	"guestbook_backend/helper"
+	"strconv"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
@@ -24,6 +26,22 @@ func NewVisitorController(helper *helper.Helper, service services.Visitor) *Visi
 		validation: validator.New(),
 		SSe:        sse.New(),
 	}
+}
+
+func (s *VisitorController) GetAll(c *fiber.Ctx) error {
+	tracerCtx := c.UserContext()
+
+	_, span := s.helper.Utils.JaegerTracer.StartSpan(tracerCtx, "guestbook.visitor_controllers", "get_all")
+	defer span.End()
+
+	name := c.Query("name")
+	page, _ := strconv.Atoi(c.Query("page"))
+
+	fmt.Println("name : ", name)
+	fmt.Println("page :", page)
+	data := s.service.GetAll(tracerCtx, name, page)
+	return c.Status(data.StatusCode).JSON(data)
+
 }
 
 func (s *VisitorController) Add(c *fiber.Ctx) error {

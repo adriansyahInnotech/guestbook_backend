@@ -14,6 +14,7 @@ type VisitorRepository interface {
 
 	Upsert(visitor *models.Visitor) error
 	GetByIDCardNumber(idcard string) (*models.Visitor, error)
+	GetAll(name string, page int, pagesize int) (*[]models.Visitor, int64, error)
 }
 
 type visitorRepository struct {
@@ -57,4 +58,30 @@ func (s *visitorRepository) GetByIDCardNumber(idcard string) (*models.Visitor, e
 	}
 
 	return visitorModel, nil
+}
+
+func (s *visitorRepository) GetAll(name string, page int, pagesize int) (*[]models.Visitor, int64, error) {
+	var total int64
+	visitorModel := new([]models.Visitor)
+
+	query := s.db.Model(visitorModel)
+
+	if name != "" {
+		query = query.Where("full_name ILIKE ?", "%"+name+"%")
+	}
+
+	err := query.Count(&total).Error
+	if err != nil {
+		return nil, 0, err
+	}
+
+	offset := (page - 1) * pagesize
+	result := query.Offset(offset).Limit(pagesize).Find(visitorModel)
+
+	if result.Error != nil && result.Error != gorm.ErrRecordNotFound {
+		return nil, total, err
+	}
+
+	return visitorModel, total, err
+
 }

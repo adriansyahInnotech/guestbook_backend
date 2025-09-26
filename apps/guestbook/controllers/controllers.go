@@ -14,6 +14,9 @@ type Controllers struct {
 	Division     *DivisionController
 	Departement  *DepartementController
 	Section      *SectionController
+	Visit        *VisitController
+	AccessCard   *AccessCardController
+	Dashboard    *DashboardController
 }
 
 func NewControllers(helper *helper.Helper) *Controllers {
@@ -29,5 +32,8 @@ func NewControllers(helper *helper.Helper) *Controllers {
 		Division:     NewDivisionController(helper, allService.Division),
 		Departement:  NewDepartementController(helper, allService.Department),
 		Section:      NewSectionController(helper, allService.Section),
+		Visit:        NewVisitController(helper, allService.Visit),
+		AccessCard:   NewAccessCardController(helper, allService.AccessCard),
+		Dashboard:    NewDashboardController(helper, allService.Dashboard),
 	}
 }

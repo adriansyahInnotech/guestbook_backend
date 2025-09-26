@@ -60,11 +60,27 @@ func (s *Routes) Routes(app *fiber.App) {
 	v1.Post("/section/add", s.controllers.Section.Add)
 	v1.Delete("/section/delete/:id", s.controllers.Section.Delete)
 
-	//devices
-	v1.Use(s.middleware.ApiKey.CheckAuthMiddleware())
+	//visit
+	v1.Get("/visit/all", s.controllers.Visit.GetAllWithFilter)
 
 	//visitor
+
+	v1.Get("/visitor/all", s.controllers.Visitor.GetAll)
+
+	//access_card
+	v1.Get("/access_card/all", s.controllers.AccessCard.GetAll)
+
+	//dashboard
+	v1.Get("/dashboard", s.controllers.Dashboard.GetAll)
+
+	//middleware auth
+	v1.Use(s.middleware.ApiKey.CheckAuthMiddleware())
+
+	//visitor with auth
 	v1.Post("/visitor/add", s.controllers.Visitor.Add)
+
+	//devices with auth
 	v1.Get("/device/validate_card/:card_number/:device_id", s.controllers.Device.ValidateCard)
+	v1.Put("/device/checkout_card/:card_number", s.controllers.Device.CheckoutCard)
 
 }

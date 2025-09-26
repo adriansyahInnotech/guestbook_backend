@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"guestbook_backend/apps/guestbook/dtos"
+	"guestbook_backend/db"
 	"guestbook_backend/helper"
 	"guestbook_backend/helper/response/dto"
 	"guestbook_backend/models"
@@ -19,6 +20,7 @@ type Device interface {
 	Upsert(tracerCtx context.Context, data *dtos.Device) *dto.Response
 	Delete(tracerCtx context.Context, id string) *dto.Response
 	ValidateCard(tracerCtx context.Context, cardNumberID string, deviceID string) *dto.Response
+	CheckoutCard(tracerCtx context.Context, card_number string) *dto.Response
 }
 
 type device struct {
@@ -121,4 +123,55 @@ func (s *device) ValidateCard(tracerCtx context.Context, cardNumberID string, de
 
 	return s.helper.Response.JSONResponseSuccess(allowed, 0, 0, "berhasil")
 
+}
+
+func (s *device) CheckoutCard(tracerCtx context.Context, card_number string) *dto.Response {
+
+	tx := db.GetDB().Begin()
+	s.repositoryGuestbook.SetDB(tx)
+
+	_, span := s.helper.Utils.JaegerTracer.StartSpan(tracerCtx, "guestbook_device_services", "checkout_card")
+	defer span.End()
+
+	accessCardModel, err := s.repositoryGuestbook.AccessCardRepository.GetAccessCardByCardNumber(card_number)
+	if err != nil {
+
+		tx.Rollback()
+		s.repositoryGuestbook.ClearTransactionDB()
+		s.helper.Utils.JaegerTracer.RecordSpanError(span, err)
+		return s.helper.Response.JSONResponseError(fiber.StatusInternalServerError, err.Error())
+	}
+
+	if err := s.repositoryGuestbook.VisitRepository.UpdateCheckoutByAccessCard(accessCardModel.ID); err != nil {
+		tx.Rollback()
+		s.repositoryGuestbook.ClearTransactionDB()
+		s.helper.Utils.JaegerTracer.RecordSpanError(span, err)
+		return s.helper.Response.JSONResponseError(fiber.StatusInternalServerError, "failed update visit checkout")
+	}
+
+	if err := s.repositoryGuestbook.AccessCardRepository.ReleaseCard(accessCardModel.ID); err != nil {
+		tx.Rollback()
+		s.repositoryGuestbook.ClearTransactionDB()
+		s.helper.Utils.JaegerTracer.RecordSpanError(span, err)
+		return s.helper.Response.JSONResponseError(fiber.StatusInternalServerError, "failed release card")
+
+	}
+
+	if err := s.redisRepository.RemoveCardDevices(card_number); err != nil {
+		tx.Rollback()
+		s.repositoryGuestbook.ClearTransactionDB()
+		s.helper.Utils.JaegerTracer.RecordSpanError(span, err)
+		return s.helper.Response.JSONResponseError(fiber.StatusInternalServerError, "failed remove cache card")
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
+		s.repositoryGuestbook.ClearTransactionDB()
+		s.helper.Utils.JaegerTracer.RecordSpanError(span, err)
+		return s.helper.Response.JSONResponseError(fiber.StatusInternalServerError, err.Error())
+	}
+
+	s.repositoryGuestbook.ClearTransactionDB()
+
+	return s.helper.Response.JSONResponseSuccess("", 0, 0, "berhasil")
 }

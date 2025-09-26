@@ -11,6 +11,7 @@ type RedisRepository interface {
 	ValidateAccess(cardNumber, deviceID string) (bool, error)
 	SetCardDevices(cardNumber string, deviceIDs []string) error
 	GetCardDevices(cardNumber string) ([]string, error)
+	RemoveCardDevices(cardNumber string) error
 }
 
 type redisRepository struct {
@@ -47,4 +48,8 @@ func (s *redisRepository) SetCardDevices(cardNumber string, deviceIDs []string) 
 
 func (s *redisRepository) GetCardDevices(cardNumber string) ([]string, error) {
 	return s.client.SMembers(s.ctx, "card:"+cardNumber+":devices").Result()
+}
+
+func (s *redisRepository) RemoveCardDevices(cardNumber string) error {
+	return s.client.Del(s.ctx, "card:"+cardNumber+":devices").Err()
 }

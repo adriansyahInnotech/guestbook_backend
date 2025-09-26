@@ -8,7 +8,7 @@ import (
 
 type AccessCard struct {
 	ID         uuid.UUID  `gorm:"type:uuid;default:uuid_generate_v4();primaryKey;column:id"`
-	VisitorID  uuid.UUID  `gorm:"type:uuid;not null;column:visitor_id"`
+	VisitorID  uuid.UUID  `gorm:"type:uuid;column:visitor_id"`
 	CardNumber string     `gorm:"size:50;not null;uniqueIndex;column:card_number"`
 	PolicyID   *uuid.UUID `gorm:"type:uuid;column:policy_id"` // optional, bisa null → fallback policy
 	CreatedAt  time.Time  `gorm:"column:created_at"`
