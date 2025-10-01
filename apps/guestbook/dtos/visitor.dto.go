@@ -7,7 +7,7 @@ type Visitor struct {
 	Phone         string `json:"phone" validate:"required"`
 	IDCardType    string `json:"id_card_type" validate:"required"`
 	IDCardNumber  string `json:"id_card_number" validate:"required"`
-	DataCard      string `json:"data_card" validate:"required"`
+	DataCard      string `json:"data_card" `
 	DivisionID    string `json:"division_id"`
 	DepartementID string `json:"department_id"`
 	SectionID     string `json:"section_id"`

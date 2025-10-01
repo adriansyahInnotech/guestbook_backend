@@ -66,8 +66,8 @@ func (s *companyRepository) GetAll(name string, page int, pagesize int) (*[]mode
 		return nil, 0, err
 	}
 
-	offset := (page - 1) * pagesize
-	result := query.Preload("Divisions").Offset(offset).Limit(pagesize).Find(CompanyModel)
+	offset := page * pagesize
+	result := query.Preload("Divisions").Order("created_at desc").Offset(offset).Limit(pagesize).Find(CompanyModel)
 
 	if result.Error != nil && result.Error != gorm.ErrRecordNotFound {
 		return nil, total, err

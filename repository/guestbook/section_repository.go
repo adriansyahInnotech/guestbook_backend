@@ -12,7 +12,7 @@ type SectionRepository interface {
 	SetDB(db *gorm.DB)
 	ClearTransactionDB()
 	Upsert(division *models.Section) error
-	GetAll(name string, page int, pagesize int) (*[]models.Section, int64, error)
+	GetAll(name string, page int, pagesize int, all string) (*[]models.Section, int64, error)
 	GetByDepartmentID(id string) (*[]models.Section, error)
 	Delete(id string) error
 }
@@ -53,29 +53,50 @@ func (s *sectionRepository) Upsert(division *models.Section) error {
 
 }
 
-func (s *sectionRepository) GetAll(name string, page int, pagesize int) (*[]models.Section, int64, error) {
-	var total int64
-	sectionModel := new([]models.Section)
+func (s *sectionRepository) GetAll(name string, page int, pagesize int, all string) (*[]models.Section, int64, error) {
+	if all == "true" {
+		var total int64
+		sectionModel := new([]models.Section)
 
-	query := s.db.Model(sectionModel)
+		query := s.db.Model(sectionModel)
 
-	if name != "" {
-		query = query.Where("name ILIKE ?", "%"+name+"%")
+		err := query.Count(&total).Error
+		if err != nil {
+			return nil, 0, err
+		}
+
+		result := query.Find(sectionModel)
+
+		if result.Error != nil && result.Error != gorm.ErrRecordNotFound {
+			return nil, total, err
+		}
+
+		return sectionModel, total, err
+
+	} else {
+		var total int64
+		sectionModel := new([]models.Section)
+
+		query := s.db.Model(sectionModel)
+
+		if name != "" {
+			query = query.Where("name ILIKE ?", "%"+name+"%")
+		}
+
+		err := query.Count(&total).Error
+		if err != nil {
+			return nil, 0, err
+		}
+
+		offset := page * pagesize
+		result := query.Preload("Department").Preload("Policy").Order("created_at desc").Offset(offset).Limit(pagesize).Order("created_at desc").Find(sectionModel)
+
+		if result.Error != nil && result.Error != gorm.ErrRecordNotFound {
+			return nil, total, err
+		}
+
+		return sectionModel, total, err
 	}
-
-	err := query.Count(&total).Error
-	if err != nil {
-		return nil, 0, err
-	}
-
-	offset := (page - 1) * pagesize
-	result := query.Preload("Department").Preload("Policy").Offset(offset).Limit(pagesize).Find(sectionModel)
-
-	if result.Error != nil && result.Error != gorm.ErrRecordNotFound {
-		return nil, total, err
-	}
-
-	return sectionModel, total, err
 
 }
 

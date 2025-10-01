@@ -15,7 +15,7 @@ import (
 )
 
 type AccessPolicy interface {
-	GetAll(tracerCtx context.Context, name string, page int) *dto.Response
+	GetAll(tracerCtx context.Context, name string, page int, all string) *dto.Response
 	Upsert(tracerCtx context.Context, data *dtos.AccessPolicy) *dto.Response
 	Delete(tracerCtx context.Context, id string) *dto.Response
 }
@@ -32,14 +32,14 @@ func NewAccessPolicyServices(helper *helper.Helper, repositoryGuestbook *reposit
 	}
 }
 
-func (s *accessPolicy) GetAll(tracerCtx context.Context, name string, page int) *dto.Response {
+func (s *accessPolicy) GetAll(tracerCtx context.Context, name string, page int, all string) *dto.Response {
 
 	_, span := s.helper.Utils.JaegerTracer.StartSpan(tracerCtx, "guestbook_access_policy_services", "get_all")
 	defer span.End()
 
 	pagesize := 5
 
-	policyModel, total, err := s.repositoryGuestbook.AccessPolicyRepository.GetAll(name, page, pagesize)
+	policyModel, total, err := s.repositoryGuestbook.AccessPolicyRepository.GetAll(name, page, pagesize, all)
 	if err != nil {
 		s.helper.Utils.JaegerTracer.RecordSpanError(span, err)
 		return s.helper.Response.JSONResponseError(fiber.StatusInternalServerError, "failed to get all policy")

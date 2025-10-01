@@ -14,7 +14,7 @@ import (
 
 type Section interface {
 	Upsert(tracerCtx context.Context, data *dtos.PlaceSetting) *dto.Response
-	GetAll(tracerCtx context.Context, name string, page int) *dto.Response
+	GetAll(tracerCtx context.Context, name string, page int, all string) *dto.Response
 	GetByDepartementID(tracerCtx context.Context, id string) *dto.Response
 	Delete(tracerCtx context.Context, id string) *dto.Response
 }
@@ -79,7 +79,7 @@ func (s *section) Upsert(tracerCtx context.Context, data *dtos.PlaceSetting) *dt
 	return s.helper.Response.JSONResponseSuccess("", 0, 0, "berhasil")
 }
 
-func (s *section) GetAll(tracerCtx context.Context, name string, page int) *dto.Response {
+func (s *section) GetAll(tracerCtx context.Context, name string, page int, all string) *dto.Response {
 
 	_, span := s.helper.Utils.JaegerTracer.StartSpan(tracerCtx, "guestbook_Section_services", "get_all")
 	defer span.End()
@@ -88,7 +88,7 @@ func (s *section) GetAll(tracerCtx context.Context, name string, page int) *dto.
 
 	// fmt.Println("\n\n\n\n\n masuk ke Section")
 
-	SectionModel, total, err := s.repositoryGuestbook.SectionRepository.GetAll(name, page, pagesize)
+	SectionModel, total, err := s.repositoryGuestbook.SectionRepository.GetAll(name, page, pagesize, all)
 	if err != nil {
 		s.helper.Utils.JaegerTracer.RecordSpanError(span, err)
 		return s.helper.Response.JSONResponseError(fiber.StatusInternalServerError, "failed to get all Section")

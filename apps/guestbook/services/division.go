@@ -15,7 +15,7 @@ import (
 
 type Division interface {
 	Upsert(tracerCtx context.Context, data *dtos.PlaceSetting) *dto.Response
-	GetAll(tracerCtx context.Context, name string, page int) *dto.Response
+	GetAll(tracerCtx context.Context, name string, page int, all string) *dto.Response
 	Delete(tracerCtx context.Context, id string) *dto.Response
 }
 
@@ -79,7 +79,7 @@ func (s *division) Upsert(tracerCtx context.Context, data *dtos.PlaceSetting) *d
 	return s.helper.Response.JSONResponseSuccess("", 0, 0, "berhasil")
 }
 
-func (s *division) GetAll(tracerCtx context.Context, name string, page int) *dto.Response {
+func (s *division) GetAll(tracerCtx context.Context, name string, page int, all string) *dto.Response {
 
 	_, span := s.helper.Utils.JaegerTracer.StartSpan(tracerCtx, "guestbook_division_services", "get_all")
 	defer span.End()
@@ -88,7 +88,7 @@ func (s *division) GetAll(tracerCtx context.Context, name string, page int) *dto
 
 	fmt.Println("\n\n\n\n\n masuk ke division")
 
-	divisionModel, total, err := s.repositoryGuestbook.DivisionRepository.GetAll(name, page, pagesize)
+	divisionModel, total, err := s.repositoryGuestbook.DivisionRepository.GetAll(name, page, pagesize, all)
 	if err != nil {
 		s.helper.Utils.JaegerTracer.RecordSpanError(span, err)
 		return s.helper.Response.JSONResponseError(fiber.StatusInternalServerError, "failed to get all division")

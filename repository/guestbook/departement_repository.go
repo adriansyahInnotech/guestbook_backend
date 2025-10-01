@@ -13,7 +13,7 @@ type DepartmentRepository interface {
 	SetDB(db *gorm.DB)
 	ClearTransactionDB()
 	Upsert(division *models.Department) error
-	GetAll(name string, page int, pagesize int) (*[]models.Department, int64, error)
+	GetAll(name string, page int, pagesize int, all string) (*[]models.Department, int64, error)
 	Delete(id string) error
 	GetByDivisionID(id string) (*[]models.Department, error)
 	GetByID(id uuid.UUID) (*models.Department, error)
@@ -55,29 +55,51 @@ func (s *departmentRepository) Upsert(division *models.Department) error {
 
 }
 
-func (s *departmentRepository) GetAll(name string, page int, pagesize int) (*[]models.Department, int64, error) {
-	var total int64
-	departmentModel := new([]models.Department)
+func (s *departmentRepository) GetAll(name string, page int, pagesize int, all string) (*[]models.Department, int64, error) {
+	if all == "true" {
 
-	query := s.db.Model(departmentModel)
+		var total int64
+		departmentModel := new([]models.Department)
 
-	if name != "" {
-		query = query.Where("name ILIKE ?", "%"+name+"%")
+		query := s.db.Model(departmentModel)
+
+		err := query.Count(&total).Error
+		if err != nil {
+			return nil, 0, err
+		}
+
+		result := query.Find(departmentModel)
+
+		if result.Error != nil && result.Error != gorm.ErrRecordNotFound {
+			return nil, total, err
+		}
+
+		return departmentModel, total, err
+
+	} else {
+		var total int64
+		departmentModel := new([]models.Department)
+
+		query := s.db.Model(departmentModel)
+
+		if name != "" {
+			query = query.Where("name ILIKE ?", "%"+name+"%")
+		}
+
+		err := query.Count(&total).Error
+		if err != nil {
+			return nil, 0, err
+		}
+
+		offset := page * pagesize
+		result := query.Preload("Sections").Preload("Division").Preload("Policy").Order("created_at desc").Offset(offset).Limit(pagesize).Find(departmentModel)
+
+		if result.Error != nil && result.Error != gorm.ErrRecordNotFound {
+			return nil, total, err
+		}
+
+		return departmentModel, total, err
 	}
-
-	err := query.Count(&total).Error
-	if err != nil {
-		return nil, 0, err
-	}
-
-	offset := (page - 1) * pagesize
-	result := query.Preload("Sections").Preload("Division").Preload("Policy").Offset(offset).Limit(pagesize).Find(departmentModel)
-
-	if result.Error != nil && result.Error != gorm.ErrRecordNotFound {
-		return nil, total, err
-	}
-
-	return departmentModel, total, err
 
 }
 

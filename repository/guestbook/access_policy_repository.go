@@ -13,7 +13,7 @@ import (
 type PolicyRepository interface {
 	SetDB(db *gorm.DB)
 	ClearTransactionDB()
-	GetAll(name string, page int, pagesize int) (*[]models.AccessPolicy, int64, error)
+	GetAll(name string, page int, pagesize int, all string) (*[]models.AccessPolicy, int64, error)
 	GetOneByName(name string) (*models.AccessPolicy, error)
 	Add(policy *models.AccessPolicy) error
 	Delete(id string) error
@@ -60,29 +60,51 @@ func (s *policyRepository) Add(policy *models.AccessPolicy) error {
 
 }
 
-func (s *policyRepository) GetAll(name string, page int, pagesize int) (*[]models.AccessPolicy, int64, error) {
-	var total int64
-	policyModel := new([]models.AccessPolicy)
+func (s *policyRepository) GetAll(name string, page int, pagesize int, all string) (*[]models.AccessPolicy, int64, error) {
+	if all == "true" {
 
-	query := s.db.Model(policyModel)
+		var total int64
+		policyModel := new([]models.AccessPolicy)
 
-	if name != "" {
-		query = query.Where("name ILIKE ?", "%"+name+"%")
+		query := s.db.Model(policyModel)
+
+		err := query.Count(&total).Error
+		if err != nil {
+			return nil, 0, err
+		}
+
+		result := query.Find(policyModel)
+
+		if result.Error != nil && result.Error != gorm.ErrRecordNotFound {
+			return nil, total, err
+		}
+
+		return policyModel, total, err
+
+	} else {
+		var total int64
+		policyModel := new([]models.AccessPolicy)
+
+		query := s.db.Model(policyModel)
+
+		if name != "" {
+			query = query.Where("name ILIKE ?", "%"+name+"%")
+		}
+
+		err := query.Count(&total).Error
+		if err != nil {
+			return nil, 0, err
+		}
+
+		offset := (page - 1) * pagesize
+		result := query.Preload("Devices.Device").Offset(offset).Limit(pagesize).Find(policyModel)
+
+		if result.Error != nil && result.Error != gorm.ErrRecordNotFound {
+			return nil, total, err
+		}
+
+		return policyModel, total, err
 	}
-
-	err := query.Count(&total).Error
-	if err != nil {
-		return nil, 0, err
-	}
-
-	offset := (page - 1) * pagesize
-	result := query.Preload("Devices.Device").Offset(offset).Limit(pagesize).Find(policyModel)
-
-	if result.Error != nil && result.Error != gorm.ErrRecordNotFound {
-		return nil, total, err
-	}
-
-	return policyModel, total, err
 
 }
 

@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"fmt"
 	"guestbook_backend/apps/guestbook/dtos"
 	"guestbook_backend/apps/guestbook/services"
 	"guestbook_backend/helper"
@@ -56,10 +55,9 @@ func (s *DepartementController) GetAll(c *fiber.Ctx) error {
 
 	name := c.Query("name")
 	page, _ := strconv.Atoi(c.Query("page"))
+	all := c.Query("all")
 
-	fmt.Println("name : ", name)
-	fmt.Println("page :", page)
-	data := s.service.GetAll(tracerCtx, name, page)
+	data := s.service.GetAll(tracerCtx, name, page, all)
 	return c.Status(data.StatusCode).JSON(data)
 
 }

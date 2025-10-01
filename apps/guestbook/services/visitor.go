@@ -11,10 +11,12 @@ import (
 	"guestbook_backend/helper/response/dto"
 	"guestbook_backend/models"
 	"guestbook_backend/repository"
+	"log"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
+	"gorm.io/datatypes"
 	"gorm.io/gorm"
 )
 
@@ -91,7 +93,7 @@ func (s *visitor) scanFromDevice(data *dtos.Visitor) error {
 		Phone:        data.Phone,
 		IDCardType:   data.IDCardType,
 		IDCardNumber: data.IDCardNumber,
-		DataCard:     data.DataCard,
+		DataCard:     datatypes.JSON([]byte(data.DataCard)),
 	}
 
 	if err := s.repositoryGuestbook.VisitorRepository.Upsert(visitorModel); err != nil {
@@ -124,13 +126,19 @@ func (s *visitor) manualInput(data *dtos.Visitor) error {
 	tx := db.GetDB().Begin()
 	s.repositoryGuestbook.SetDB(tx)
 
+	if data.PolicyID == "" {
+		tx.Rollback()
+		s.repositoryGuestbook.ClearTransactionDB()
+		return errors.New("tidak ada policy")
+	}
+
 	visitorModel := &models.Visitor{
 		FullName:     data.FullName,
 		Company:      data.Company,
 		Phone:        data.Phone,
 		IDCardType:   data.IDCardType,
 		IDCardNumber: data.IDCardNumber,
-		DataCard:     data.DataCard,
+		DataCard:     datatypes.JSON([]byte(data.DataCard)),
 	}
 
 	if err := s.repositoryGuestbook.VisitorRepository.Upsert(visitorModel); err != nil {
@@ -196,15 +204,13 @@ func (s *visitor) manualInput(data *dtos.Visitor) error {
 		visitModel.DeviceID = &parsed
 	}
 
-	if data.PolicyID != "" {
-		parsed, err := uuid.Parse(data.PolicyID)
-		if err != nil {
-			tx.Rollback()
-			s.repositoryGuestbook.ClearTransactionDB()
-			return err
-		}
-		accessCardModel.PolicyID = &parsed
+	parsed, err := uuid.Parse(data.PolicyID)
+	if err != nil {
+		tx.Rollback()
+		s.repositoryGuestbook.ClearTransactionDB()
+		return err
 	}
+	accessCardModel.PolicyID = &parsed
 
 	//check card active
 	activeVisit, err := s.repositoryGuestbook.VisitRepository.GetVisitActiveByCard(data.AccessCard)
@@ -224,12 +230,14 @@ func (s *visitor) manualInput(data *dtos.Visitor) error {
 	accessCardModel.CardNumber = data.AccessCard
 
 	if err := s.repositoryGuestbook.AccessCardRepository.Upsert(accessCardModel); err != nil {
+		log.Println("\n\n\n error upsert accesscard to redis : ", err.Error())
 		tx.Rollback()
 		s.repositoryGuestbook.ClearTransactionDB()
 		return err
 	}
 
 	if err := s.repositoryGuestbook.AccessCardRepository.SyncCardToRedis(accessCardModel.ID); err != nil {
+		log.Println("\n\n\n error sync card to redis : ", err.Error())
 		tx.Rollback()
 		s.repositoryGuestbook.ClearTransactionDB()
 		return err
